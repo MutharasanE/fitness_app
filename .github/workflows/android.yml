@@ -35,7 +35,16 @@ jobs:
           npm install -g @expo/cli
           npx expo install --fix
           
-          # Generate native code (remove --clear flag)
+          # Create missing asset files if they don't exist
+          mkdir -p assets
+          
+          # Create a simple 1x1 transparent PNG if adaptive-icon.png is missing
+          if [ ! -f "assets/adaptive-icon.png" ]; then
+            echo "Creating placeholder adaptive-icon.png"
+            echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==" | base64 -d > assets/adaptive-icon.png
+          fi
+          
+          # Generate native code
           npx expo prebuild --platform android
         else
           echo "Regular React Native project - android folder should exist"
