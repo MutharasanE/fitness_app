@@ -29,7 +29,7 @@ jobs:
       run: npm install
       
     - name: Install sharp-cli for image processing
-      run: npm install -g sharp-cli
+      run: npm install -g sharp-cli sharp
       
     - name: Check project type and setup
       run: |
@@ -41,26 +41,75 @@ jobs:
           # Create assets directory
           mkdir -p assets
           
-          # Create proper placeholder images using ImageMagick (available on Ubuntu runners)
-          if [ ! -f "assets/icon.png" ]; then
-            echo "Creating placeholder icon.png (1024x1024)"
-            convert -size 1024x1024 xc:white -fill blue -draw "circle 512,512 512,256" assets/icon.png
-          fi
-          
-          if [ ! -f "assets/adaptive-icon.png" ]; then
-            echo "Creating placeholder adaptive-icon.png (1024x1024)"
-            convert -size 1024x1024 xc:white -fill green -draw "circle 512,512 512,256" assets/adaptive-icon.png
-          fi
-          
-          if [ ! -f "assets/splash.png" ]; then
-            echo "Creating placeholder splash.png (1284x2778)"
-            convert -size 1284x2778 xc:white -fill gray -pointsize 72 -gravity center -annotate +0+0 "Fitness Tracker" assets/splash.png
-          fi
-          
-          if [ ! -f "assets/favicon.png" ]; then
-            echo "Creating placeholder favicon.png (48x48)"
-            convert -size 48x48 xc:white -fill red -draw "circle 24,24 24,12" assets/favicon.png
-          fi
+          # Create placeholder images using Node.js and sharp
+          node -e "
+            const sharp = require('sharp');
+            const fs = require('fs');
+            
+            async function createPlaceholders() {
+              // Create icon.png (1024x1024)
+              if (!fs.existsSync('assets/icon.png')) {
+                console.log('Creating placeholder icon.png');
+                await sharp({
+                  create: {
+                    width: 1024,
+                    height: 1024,
+                    channels: 4,
+                    background: { r: 0, g: 150, b: 255, alpha: 1 }
+                  }
+                })
+                .png()
+                .toFile('assets/icon.png');
+              }
+              
+              // Create adaptive-icon.png (1024x1024)
+              if (!fs.existsSync('assets/adaptive-icon.png')) {
+                console.log('Creating placeholder adaptive-icon.png');
+                await sharp({
+                  create: {
+                    width: 1024,
+                    height: 1024,
+                    channels: 4,
+                    background: { r: 0, g: 200, b: 100, alpha: 1 }
+                  }
+                })
+                .png()
+                .toFile('assets/adaptive-icon.png');
+              }
+              
+              // Create splash.png (1284x2778)
+              if (!fs.existsSync('assets/splash.png')) {
+                console.log('Creating placeholder splash.png');
+                await sharp({
+                  create: {
+                    width: 1284,
+                    height: 2778,
+                    channels: 4,
+                    background: { r: 255, g: 255, b: 255, alpha: 1 }
+                  }
+                })
+                .png()
+                .toFile('assets/splash.png');
+              }
+              
+              // Create favicon.png (48x48)
+              if (!fs.existsSync('assets/favicon.png')) {
+                console.log('Creating placeholder favicon.png');
+                await sharp({
+                  create: {
+                    width: 48,
+                    height: 48,
+                    channels: 4,
+                    background: { r: 255, g: 100, b: 100, alpha: 1 }
+                  }
+                })
+                .png()
+                .toFile('assets/favicon.png');
+              }
+            }
+            
+            createPlaceholders().catch(console.error);
+          "
           
           # Generate native code
           npx expo prebuild --platform android
