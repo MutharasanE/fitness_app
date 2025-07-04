@@ -28,6 +28,9 @@ jobs:
     - name: Install dependencies
       run: npm install
       
+    - name: Install sharp-cli for image processing
+      run: npm install -g sharp-cli
+      
     - name: Check project type and setup
       run: |
         if [ -f "app.json" ] || [ -f "app.config.js" ]; then
@@ -35,13 +38,28 @@ jobs:
           npm install -g @expo/cli
           npx expo install --fix
           
-          # Create missing asset files if they don't exist
+          # Create assets directory
           mkdir -p assets
           
-          # Create a simple 1x1 transparent PNG if adaptive-icon.png is missing
+          # Create proper placeholder images using ImageMagick (available on Ubuntu runners)
+          if [ ! -f "assets/icon.png" ]; then
+            echo "Creating placeholder icon.png (1024x1024)"
+            convert -size 1024x1024 xc:white -fill blue -draw "circle 512,512 512,256" assets/icon.png
+          fi
+          
           if [ ! -f "assets/adaptive-icon.png" ]; then
-            echo "Creating placeholder adaptive-icon.png"
-            echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==" | base64 -d > assets/adaptive-icon.png
+            echo "Creating placeholder adaptive-icon.png (1024x1024)"
+            convert -size 1024x1024 xc:white -fill green -draw "circle 512,512 512,256" assets/adaptive-icon.png
+          fi
+          
+          if [ ! -f "assets/splash.png" ]; then
+            echo "Creating placeholder splash.png (1284x2778)"
+            convert -size 1284x2778 xc:white -fill gray -pointsize 72 -gravity center -annotate +0+0 "Fitness Tracker" assets/splash.png
+          fi
+          
+          if [ ! -f "assets/favicon.png" ]; then
+            echo "Creating placeholder favicon.png (48x48)"
+            convert -size 48x48 xc:white -fill red -draw "circle 24,24 24,12" assets/favicon.png
           fi
           
           # Generate native code
