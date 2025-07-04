@@ -28,8 +28,8 @@ jobs:
     - name: Install dependencies
       run: npm install
       
-    - name: Install sharp-cli for image processing
-      run: npm install -g sharp-cli sharp
+    - name: Install sharp for image processing
+      run: npm install sharp
       
     - name: Check project type and setup
       run: |
@@ -42,74 +42,87 @@ jobs:
           mkdir -p assets
           
           # Create placeholder images using Node.js and sharp
-          node -e "
-            const sharp = require('sharp');
-            const fs = require('fs');
-            
-            async function createPlaceholders() {
-              // Create icon.png (1024x1024)
-              if (!fs.existsSync('assets/icon.png')) {
-                console.log('Creating placeholder icon.png');
-                await sharp({
-                  create: {
-                    width: 1024,
-                    height: 1024,
-                    channels: 4,
-                    background: { r: 0, g: 150, b: 255, alpha: 1 }
-                  }
-                })
-                .png()
-                .toFile('assets/icon.png');
-              }
-              
-              // Create adaptive-icon.png (1024x1024)
-              if (!fs.existsSync('assets/adaptive-icon.png')) {
-                console.log('Creating placeholder adaptive-icon.png');
-                await sharp({
-                  create: {
-                    width: 1024,
-                    height: 1024,
-                    channels: 4,
-                    background: { r: 0, g: 200, b: 100, alpha: 1 }
-                  }
-                })
-                .png()
-                .toFile('assets/adaptive-icon.png');
-              }
-              
-              // Create splash.png (1284x2778)
-              if (!fs.existsSync('assets/splash.png')) {
-                console.log('Creating placeholder splash.png');
-                await sharp({
-                  create: {
-                    width: 1284,
-                    height: 2778,
-                    channels: 4,
-                    background: { r: 255, g: 255, b: 255, alpha: 1 }
-                  }
-                })
-                .png()
-                .toFile('assets/splash.png');
-              }
-              
-              // Create favicon.png (48x48)
-              if (!fs.existsSync('assets/favicon.png')) {
-                console.log('Creating placeholder favicon.png');
-                await sharp({
-                  create: {
-                    width: 48,
-                    height: 48,
-                    channels: 4,
-                    background: { r: 255, g: 100, b: 100, alpha: 1 }
-                  }
-                })
-                .png()
-                .toFile('assets/favicon.png');
-              }
+          cat > create_assets.js << 'EOF'
+        const sharp = require('sharp');
+        const fs = require('fs');
+        
+        async function createPlaceholders() {
+          try {
+            // Create icon.png (1024x1024)
+            if (!fs.existsSync('assets/icon.png')) {
+              console.log('Creating placeholder icon.png');
+              await sharp({
+                create: {
+                  width: 1024,
+                  height: 1024,
+                  channels: 4,
+                  background: { r: 0, g: 150, b: 255, alpha: 1 }
+                }
+              })
+              .png()
+              .toFile('assets/icon.png');
             }
             
-            createPlaceholders().catch(console.error);
-          "
+            // Create adaptive-icon.png (1024x1024)
+            if (!fs.existsSync('assets/adaptive-icon.png')) {
+              console.log('Creating placeholder adaptive-icon.png');
+              await sharp({
+                create: {
+                  width: 1024,
+                  height: 1024,
+                  channels: 4,
+                  background: { r: 0, g: 200, b: 100, alpha: 1 }
+                }
+              })
+              .png()
+              .toFile('assets/adaptive-icon.png');
+            }
+            
+            // Create splash.png (1284x2778)
+            if (!fs.existsSync('assets/splash.png')) {
+              console.log('Creating placeholder splash.png');
+              await sharp({
+                create: {
+                  width: 1284,
+                  height: 2778,
+                  channels: 4,
+                  background: { r: 255, g: 255, b: 255, alpha: 1 }
+                }
+              })
+              .png()
+              .toFile('assets/splash.png');
+            }
+            
+            // Create favicon.png (48x48)
+            if (!fs.existsSync('assets/favicon.png')) {
+              console.log('Creating placeholder favicon.png');
+              await sharp({
+                create: {
+                  width: 48,
+                  height: 48,
+                  channels: 4,
+                  background: { r: 255, g: 100, b: 100, alpha: 1 }
+                }
+              })
+              .png()
+              .toFile('assets/favicon.png');
+            }
+            
+            console.log('All placeholder assets created successfully');
+          } catch (error) {
+            console.error('Error creating assets:', error);
+            process.exit(1);
+          }
+        }
+        
+        createPlaceholders();
+        EOF
+          
+          # Run the asset creation script
+          node create_assets.js
+          
+          # Clean up the script
+          rm create_assets.js
           
           # Generate native code
           npx expo prebuild --platform android
