@@ -28,15 +28,18 @@ jobs:
     - name: Install dependencies
       run: npm install
       
-    - name: Install React Native CLI
-      run: npm install -g @react-native-community/cli
-      
-    - name: Generate Android project (if needed)
+    - name: Check project type and setup
       run: |
-        if [ ! -d "android" ]; then
-          npx react-native init temp --skip-install
-          cp -r temp/android ./
-          rm -rf temp
+        if [ -f "app.json" ] || [ -f "app.config.js" ]; then
+          echo "Expo project detected"
+          npm install -g @expo/cli
+          npx expo install --fix
+          
+          # Generate native code
+          npx expo prebuild --platform android --clear
+        else
+          echo "Regular React Native project - android folder should exist"
+          exit 1
         fi
         
     - name: Build Android APK
