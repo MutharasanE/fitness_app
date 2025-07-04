@@ -28,6 +28,17 @@ jobs:
     - name: Install dependencies
       run: npm install
       
+    - name: Install React Native CLI
+      run: npm install -g @react-native-community/cli
+      
+    - name: Generate Android project (if needed)
+      run: |
+        if [ ! -d "android" ]; then
+          npx react-native init temp --skip-install
+          cp -r temp/android ./
+          rm -rf temp
+        fi
+        
     - name: Build Android APK
       run: |
         cd android
