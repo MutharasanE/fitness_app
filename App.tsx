@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Provider as PaperProvider } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { StatusBar } from 'expo-status-bar';
 
 import CalorieTracker from './src/screens/CalorieTracker';
 import WorkoutTracker from './src/screens/WorkoutTracker';
@@ -17,10 +18,32 @@ const Stack = createStackNavigator();
 
 function WorkoutStack() {
   return (
-    <Stack.Navigator>
-      <Stack.Screen name="WorkoutMain" component={WorkoutTracker} options={{ title: 'Workout Tracker' }} />
-      <Stack.Screen name="ExerciseDetail" component={ExerciseDetail} options={{ title: 'Exercise Details' }} />
-      <Stack.Screen name="CustomExercises" component={CustomExercises} options={{ title: 'Custom Exercises' }} />
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#4CAF50',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      }}
+    >
+      <Stack.Screen 
+        name="WorkoutMain" 
+        component={WorkoutTracker} 
+        options={{ title: 'Workout Tracker' }} 
+      />
+      <Stack.Screen 
+        name="ExerciseDetail" 
+        component={ExerciseDetail} 
+        options={{ title: 'Exercise Details' }} 
+      />
+      <Stack.Screen 
+        name="CustomExercises" 
+        component={CustomExercises} 
+        options={{ title: 'Custom Exercises' }} 
+      />
     </Stack.Navigator>
   );
 }
@@ -36,12 +59,30 @@ function MainTabs() {
           
           return <Icon name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#2196F3',
+        tabBarActiveTintColor: '#4CAF50',
         tabBarInactiveTintColor: 'gray',
+        headerStyle: {
+          backgroundColor: '#4CAF50',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
       })}
     >
-      <Tab.Screen name="Calories" component={CalorieTracker} />
-      <Tab.Screen name="Workout" component={WorkoutStack} options={{ headerShown: false }} />
+      <Tab.Screen 
+        name="Calories" 
+        component={CalorieTracker}
+        options={{ title: '🍎 Calorie Tracker' }}
+      />
+      <Tab.Screen 
+        name="Workout" 
+        component={WorkoutStack} 
+        options={{ 
+          headerShown: false,
+          title: '💪 Workouts'
+        }} 
+      />
     </Tab.Navigator>
   );
 }
@@ -51,6 +92,7 @@ export default function App() {
     <PaperProvider>
       <FitnessProvider>
         <NavigationContainer>
+          <StatusBar style="light" backgroundColor="#4CAF50" />
           <MainTabs />
         </NavigationContainer>
       </FitnessProvider>
