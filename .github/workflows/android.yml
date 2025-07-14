@@ -87,51 +87,17 @@ jobs:
         cd android
         chmod +x gradlew
         
-        # Build RELEASE APK instead of debug - this creates a standalone app
+        # Build RELEASE APK - this creates a standalone app with bundled JS
         ./gradlew assembleRelease
         
-        # Verify APK was created
+        # Show what was built
         ls -la app/build/outputs/apk/release/
 
-    - name: Sign APK for installation
-      run: |
-        cd android/app/build/outputs/apk/release
-        
-        # Create a keystore for signing
-        keytool -genkey -v -keystore release.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=FitnessApp"
-        
-        # Find the correct apksigner path
-        APKSIGNER=$(find $ANDROID_HOME/build-tools -name "apksigner" | head -1)
-        echo "Using apksigner: $APKSIGNER"
-        
-        # Sign the APK with correct syntax
-        java -jar $ANDROID_HOME/build-tools/*/lib/apksigner.jar sign \
-          --ks release.keystore \
-          --ks-key-alias androiddebugkey \
-          --ks-pass pass:android \
-          --key-pass pass:android \
-          --out app-release-signed.apk \
-          app-release-unsigned.apk
-        
-        # Alternative method using jarsigner if apksigner fails
-        if [ ! -f "app-release-signed.apk" ]; then
-          echo "Using jarsigner as fallback"
-          cp app-release-unsigned.apk app-release-signed.apk
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore release.keystore -storepass android app-release-signed.apk androiddebugkey
-          
-          # Align the APK
-          $ANDROID_HOME/build-tools/*/zipalign -v 4 app-release-signed.apk app-release-aligned.apk
-          mv app-release-aligned.apk app-release-signed.apk
-        fi
-        
-        # Verify the APK exists
-        ls -la app-release-signed.apk
-
-    - name: Upload Signed APK Artifact
+    - name: Upload Release APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: fitness-tracker-standalone-v${{ github.run_number }}
-        path: android/app/build/outputs/apk/release/app-release-signed.apk
+        name: fitness-tracker-release-v${{ github.run_number }}
+        path: android/app/build/outputs/apk/release/app-release-unsigned.apk
 
     - name: Create GitHub Release
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -142,7 +108,7 @@ jobs:
         body: |
           ## 🏋️ Fitness Tracker - Standalone Mobile App
           
-          **✅ STANDALONE APK - No development server needed!**
+          **✅ STANDALONE RELEASE APK - No development server needed!**
           
           ### Features:
           - 📊 User profile tracking (weight, height, age, activity level)
@@ -152,7 +118,7 @@ jobs:
           - 📅 Weekly workout planning
           
           ### Installation:
-          1. Download `app-release-signed.apk` below
+          1. Download `app-release-unsigned.apk` below
           2. On your Android phone: Settings → Security → Enable "Install from unknown sources"
           3. Open the APK file and install
           4. Launch "Fitness Tracker" from your app drawer
@@ -160,12 +126,13 @@ jobs:
           **✅ Works completely offline - no server required!**
           **✅ All data stored locally on your device**
           **✅ No Metro bundler or development server needed**
+          **✅ Release build with optimized performance**
           
           ### Technical Notes:
-          - This is a **release build** with bundled JavaScript
-          - App runs independently without any external dependencies
-          - All React Native code is compiled into the APK
-        files: android/app/build/outputs/apk/release/app-release-signed.apk
+          - This is an **unsigned release APK** (fine for personal use)
+          - All JavaScript is bundled into the APK
+          - App runs independently without external dependencies
+        files: android/app/build/outputs/apk/release/app-release-unsigned.apk
         draft: false
         prerelease: false
         make_latest: true
