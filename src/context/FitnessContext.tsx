@@ -18,6 +18,9 @@ interface FitnessContextType {
   addCalorieEntry: (entry: Omit<CalorieEntry, 'id'>) => void;
   exercises: Exercise[];
   addCustomExercise: (exercise: Omit<Exercise, 'id' | 'isCustom'>) => void;
+  addExercise: (exercise: Exercise) => void; // Add this
+  updateExercise: (exercise: Exercise) => void; // Add this
+  deleteExercise: (exerciseId: string) => void; // Add this
   deleteCustomExercise: (id: string) => void;
   workoutEntries: WorkoutEntry[];
   addWorkoutEntry: (entry: Omit<WorkoutEntry, 'id'>) => void;
@@ -33,9 +36,10 @@ interface FitnessContextType {
   getTodaysExerciseSets: (exerciseId: string) => Array<{reps: number; weight: number; date: string}>;
   workoutSessions: WorkoutSession[];
   addWorkoutSession: (session: Omit<WorkoutSession, 'id'>) => void;
-  updateWorkoutSession: (sessionId: string, updates: Partial<WorkoutSession>) => void;
+  updateWorkoutSession: (session: WorkoutSession) => void;
   getExerciseHistory: (exerciseId: string) => WorkoutSession[];
   getTodaysWorkout: (exerciseId: string) => WorkoutSession | undefined;
+  getWorkoutSessionsForExercise: (exerciseId: string) => WorkoutSession[]; // Add this
 }
 
 const FitnessContext = createContext<FitnessContextType | undefined>(undefined);
@@ -144,6 +148,80 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const addExercise = async (exercise: Exercise) => {
+  try {
+    const newExercise = {
+      ...exercise,
+      id: exercise.id || `custom_${Date.now()}`,
+      isCustom: true,
+    };
+    
+    const updated = [...exercises, newExercise];
+    setExercises(updated);
+    
+    const customOnly = updated.filter(e => e.isCustom);
+    await AsyncStorage.setItem('customExercises', JSON.stringify(customOnly));
+    console.log('Exercise added successfully:', newExercise.name);
+  } catch (error) {
+    console.error('Error adding exercise:', error);
+  }
+};
+
+const updateExercise = async (exercise: Exercise) => {
+  try {
+    const updated = exercises.map(ex => 
+      ex.id === exercise.id ? exercise : ex
+    );
+    setExercises(updated);
+    
+    const customOnly = updated.filter(e => e.isCustom);
+    await AsyncStorage.setItem('customExercises', JSON.stringify(customOnly));
+    console.log('Exercise updated successfully:', exercise.name);
+  } catch (error) {
+    console.error('Error updating exercise:', error);
+  }
+};
+
+const deleteExercise = async (exerciseId: string) => {
+  try {
+    // Remove from exercises list
+    const updatedExercises = exercises.filter(e => e.id !== exerciseId);
+    setExercises(updatedExercises);
+    
+    // Remove from all workout plans
+    const updatedPlan = { ...workoutPlan };
+    Object.keys(updatedPlan).forEach(day => {
+      updatedPlan[day as DayOfWeek] = updatedPlan[day as DayOfWeek].filter(id => id !== exerciseId);
+    });
+    setWorkoutPlan(updatedPlan);
+    
+    // Remove from exercise history
+    const updatedHistory = exerciseHistory.filter(ex => ex.exerciseId !== exerciseId);
+    setExerciseHistory(updatedHistory);
+
+    // Remove from workout sessions
+    const updatedSessions = workoutSessions.filter(session => session.exerciseId !== exerciseId);
+    setWorkoutSessions(updatedSessions);
+    
+    // Save to storage
+    const customOnly = updatedExercises.filter(e => e.isCustom);
+    await AsyncStorage.setItem('customExercises', JSON.stringify(customOnly));
+    await AsyncStorage.setItem('workoutPlan', JSON.stringify(updatedPlan));
+    await AsyncStorage.setItem('exerciseHistory', JSON.stringify(updatedHistory));
+    await AsyncStorage.setItem('workoutSessions', JSON.stringify(updatedSessions));
+    
+    console.log('Exercise deleted successfully:', exerciseId);
+  } catch (error) {
+    console.error('Error deleting exercise:', error);
+  }
+};
+
+const getWorkoutSessionsForExercise = (exerciseId: string): WorkoutSession[] => {
+  return workoutSessions
+    .filter(session => session.exerciseId === exerciseId)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+};
+
   const loadData = async () => {
     try {
       const profile = await AsyncStorage.getItem('userProfile');
@@ -251,23 +329,23 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const updateWorkoutSession = async (sessionId: string, updates: Partial<WorkoutSession>) => {
-    try {
-      console.log('Updating workout session:', sessionId, updates);
-      
-      const updated = workoutSessions.map(session =>
-        session.id === sessionId ? { ...session, ...updates } : session
-      );
-      
-      setWorkoutSessions(updated);
-      
-      // Immediately save to storage
-      await AsyncStorage.setItem('workoutSessions', JSON.stringify(updated));
-      console.log('Workout session updated in storage');
-    } catch (error) {
-      console.error('Error updating workout session:', error);
-    }
-  };
+  const updateWorkoutSession = async (session: WorkoutSession) => {
+  try {
+    console.log('Updating workout session:', session.id, session);
+    
+    const updated = workoutSessions.map(s =>
+      s.id === session.id ? session : s
+    );
+    
+    setWorkoutSessions(updated);
+    
+    // Immediately save to storage
+    await AsyncStorage.setItem('workoutSessions', JSON.stringify(updated));
+    console.log('Workout session updated in storage');
+  } catch (error) {
+    console.error('Error updating workout session:', error);
+  }
+};
 
   const getExerciseHistory = (exerciseId: string): WorkoutSession[] => {
     return workoutSessions
@@ -401,30 +479,34 @@ export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const value: FitnessContextType = {
     userProfile,
-    setUserProfile,
-    calorieEntries,
-    addCalorieEntry,
-    exercises,
-    addCustomExercise,
-    deleteCustomExercise,
-    workoutEntries,
-    addWorkoutEntry,
-    workoutPlan,
-    updateWorkoutPlan,
-    addExerciseToDay,
-    removeExerciseFromDay,
-    getCurrentDayPlan,
-    getMaintenanceCalories,
-    exerciseHistory,
-    addExerciseSet,
-    getExerciseHistory,
-    getExerciseHistoryByDateRange,
-    getTodaysExerciseSets,
-    workoutSessions,
-    addWorkoutSession,
-    updateWorkoutSession,
-    getTodaysWorkout,
-  };
+  setUserProfile,
+  calorieEntries,
+  addCalorieEntry,
+  exercises,
+  addCustomExercise,
+  addExercise,
+  updateExercise,
+  deleteExercise,
+  deleteCustomExercise,
+  workoutEntries,
+  addWorkoutEntry,
+  workoutPlan,
+  updateWorkoutPlan,
+  addExerciseToDay,
+  removeExerciseFromDay,
+  getCurrentDayPlan,
+  getMaintenanceCalories,
+  exerciseHistory,
+  addExerciseSet,
+  getExerciseHistory,
+  getExerciseHistoryByDateRange,
+  getTodaysExerciseSets,
+  workoutSessions,
+  addWorkoutSession,
+  updateWorkoutSession,
+  getTodaysWorkout,
+  getWorkoutSessionsForExercise,
+};
 
   return (
     <FitnessContext.Provider value={value}>
