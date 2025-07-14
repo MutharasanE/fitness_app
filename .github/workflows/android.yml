@@ -5,6 +5,12 @@ on:
   pull_request:
     branches: [ main ]
 
+# Add permissions for the workflow
+permissions:
+  contents: write
+  packages: write
+  actions: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,18 +40,14 @@ jobs:
       
     - name: Install required Expo packages
       run: |
-        # Install expo-build-properties and other required packages
         npx expo install expo-build-properties
         npx expo install --fix
         
     - name: Create missing assets
       run: |
         npm install sharp
-        
-        # Create assets directory if it doesn't exist
         mkdir -p assets
         
-        # Only create assets if they don't exist
         node -e "
         const sharp = require('sharp');
         const fs = require('fs');
@@ -80,31 +82,48 @@ jobs:
       run: |
         npx expo prebuild --platform android --clean
 
-    - name: Build APK
+    - name: Build Release APK (Standalone)
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug
+        
+        # Build RELEASE APK instead of debug - this creates a standalone app
+        ./gradlew assembleRelease
         
         # Verify APK was created
-        ls -la app/build/outputs/apk/debug/
+        ls -la app/build/outputs/apk/release/
 
-    - name: Upload APK
+    - name: Sign APK for installation
+      run: |
+        cd android/app/build/outputs/apk/release
+        
+        # Create a keystore for signing
+        keytool -genkey -v -keystore release.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=FitnessApp"
+        
+        # Sign the APK
+        $ANDROID_HOME/build-tools/*/apksigner sign --ks release.keystore --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --out app-release-signed.apk app-release-unsigned.apk
+        
+        # Verify signing
+        $ANDROID_HOME/build-tools/*/apksigner verify app-release-signed.apk
+        
+        ls -la
+
+    - name: Upload Signed APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: fitness-tracker-v${{ github.run_number }}
-        path: android/app/build/outputs/apk/debug/app-debug.apk
+        name: fitness-tracker-standalone-v${{ github.run_number }}
+        path: android/app/build/outputs/apk/release/app-release-signed.apk
 
-    - name: Create Release
-      if: github.ref == 'refs/heads/main'
-      uses: softprops/action-gh-release@v1
+    - name: Create GitHub Release
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ github.run_number }}
         name: Fitness Tracker v${{ github.run_number }}
         body: |
           ## 🏋️ Fitness Tracker - Standalone Mobile App
           
-          **Ready to install and use offline!**
+          **✅ STANDALONE APK - No development server needed!**
           
           ### Features:
           - 📊 User profile tracking (weight, height, age, activity level)
@@ -114,14 +133,22 @@ jobs:
           - 📅 Weekly workout planning
           
           ### Installation:
-          1. Download `app-debug.apk` below
+          1. Download `app-release-signed.apk` below
           2. On your Android phone: Settings → Security → Enable "Install from unknown sources"
           3. Open the APK file and install
           4. Launch "Fitness Tracker" from your app drawer
           
           **✅ Works completely offline - no server required!**
           **✅ All data stored locally on your device**
-        files: android/app/build/outputs/apk/debug/app-debug.apk
+          **✅ No Metro bundler or development server needed**
+          
+          ### Technical Notes:
+          - This is a **release build** with bundled JavaScript
+          - App runs independently without any external dependencies
+          - All React Native code is compiled into the APK
+        files: android/app/build/outputs/apk/release/app-release-signed.apk
         draft: false
+        prerelease: false
+        make_latest: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
