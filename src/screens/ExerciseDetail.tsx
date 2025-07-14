@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -16,20 +16,27 @@ import {
 import { LineChart } from 'react-native-chart-kit';
 import { useFitness } from '../context/FitnessContext';
 
-interface ExerciseSet {
-  reps: number;
-  weight: number;
-  date: string;
-}
 const ExerciseDetail = ({ route }: any) => {
   const { exerciseId } = route.params;
-  const { exercises } = useFitness();
+  const { 
+    exercises, 
+    addWorkoutSession, 
+    getWorkoutSessionsForExercise,
+    updateWorkoutSession 
+  } = useFitness();
   
-  const [sets, setSets] = useState<ExerciseSet[]>([]);
   const [currentReps, setCurrentReps] = useState('');
   const [currentWeight, setCurrentWeight] = useState('');
-  const exercise = exercises.find((ex) => ex.id === exerciseId);
   
+  const exercise = exercises.find((ex) => ex.id === exerciseId);
+  const workoutSessions = getWorkoutSessionsForExercise ? getWorkoutSessionsForExercise(exerciseId) : [];
+  
+  // Get today's session
+  const today = new Date().toISOString().split('T')[0];
+  const todaysSession = workoutSessions.find(session => 
+    session.date.startsWith(today)
+  );
+
   if (!exercise) {
     return (
       <View style={styles.container}>
@@ -39,20 +46,48 @@ const ExerciseDetail = ({ route }: any) => {
   }
 
   const addSet = () => {
-    const newSet: ExerciseSet = {
+    if (!currentReps || !currentWeight) {
+      return;
+    }
+
+    const newSet = {
       reps: parseInt(currentReps),
       weight: parseFloat(currentWeight),
-      date: new Date().toISOString().split('T')[0],
+      completed: true,
     };
 
-    setSets([...sets, newSet]);
+    const today = new Date().toISOString();
+
+    if (todaysSession) {
+      // Update existing session
+      const updatedSession = {
+        ...todaysSession,
+        sets: [...todaysSession.sets, newSet],
+      };
+      updateWorkoutSession && updateWorkoutSession(updatedSession);
+    } else {
+      // Create new session
+      addWorkoutSession({
+        exerciseId,
+        date: today,
+        sets: [newSet],
+        notes: '',
+      });
+    }
+
     setCurrentReps('');
     setCurrentWeight('');
   };
 
   const getChartData = () => {
-    const today = new Date().toISOString().split('T')[0];
-    const todaySets = sets.filter((set) => set.date === today);
+    const todaySets = todaysSession?.sets || [];
+
+    if (todaySets.length === 0) {
+      return {
+        labels: ['No data'],
+        datasets: [{ data: [0] }],
+      };
+    }
 
     return {
       labels: todaySets.map((_, index) => `Set ${index + 1}`),
@@ -66,6 +101,8 @@ const ExerciseDetail = ({ route }: any) => {
     };
   };
 
+  const todaySets = todaysSession?.sets || [];
+
   return (
     <ScrollView style={styles.container}>
       <Card style={styles.infoCard}>
@@ -75,6 +112,9 @@ const ExerciseDetail = ({ route }: any) => {
             Category: {exercise.category.toUpperCase()}
             {exercise.isCustom && ' (Custom)'}
           </Paragraph>
+          {exercise.description && (
+            <Paragraph>{exercise.description}</Paragraph>
+          )}
         </Card.Content>
       </Card>
 
@@ -95,13 +135,18 @@ const ExerciseDetail = ({ route }: any) => {
             keyboardType="numeric"
             style={styles.input}
           />
-          <Button mode="contained" onPress={addSet} style={styles.addButton}>
+          <Button 
+            mode="contained" 
+            onPress={addSet} 
+            style={styles.addButton}
+            disabled={!currentReps || !currentWeight}
+          >
             Add Set
           </Button>
         </Card.Content>
       </Card>
 
-      {sets.filter((set) => set.date === new Date().toISOString().split('T')[0]).length > 0 && (
+      {todaySets.length > 0 && (
         <Card style={styles.chartCard}>
           <Card.Content>
             <Title>Today's Progress</Title>
@@ -117,12 +162,12 @@ const ExerciseDetail = ({ route }: any) => {
                 color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
                 labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
                 style: {
-    borderRadius: 16,
-  },
+                  borderRadius: 16,
+                },
                 propsForDots: {
                   r: '4',
                   strokeWidth: '2',
-  },
+                },
               }}
               style={styles.chart}
             />
@@ -132,16 +177,18 @@ const ExerciseDetail = ({ route }: any) => {
 
       <Card style={styles.historyCard}>
         <Card.Content>
-          <Title>Today's Sets</Title>
-          {sets
-            .filter((set) => set.date === new Date().toISOString().split('T')[0])
-            .map((set, index) => (
+          <Title>Today's Sets ({todaySets.length})</Title>
+          {todaySets.length === 0 ? (
+            <Text>No sets completed today</Text>
+          ) : (
+            todaySets.map((set, index) => (
               <View key={index} style={styles.setRow}>
                 <Text>
                   Set {index + 1}: {set.reps} reps × {set.weight} lbs
                 </Text>
               </View>
-            ))}
+            ))
+          )}
         </Card.Content>
       </Card>
     </ScrollView>
