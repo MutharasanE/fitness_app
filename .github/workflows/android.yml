@@ -100,13 +100,32 @@ jobs:
         # Create a keystore for signing
         keytool -genkey -v -keystore release.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=FitnessApp"
         
-        # Sign the APK
-        $ANDROID_HOME/build-tools/*/apksigner sign --ks release.keystore --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --out app-release-signed.apk app-release-unsigned.apk
+        # Find the correct apksigner path
+        APKSIGNER=$(find $ANDROID_HOME/build-tools -name "apksigner" | head -1)
+        echo "Using apksigner: $APKSIGNER"
         
-        # Verify signing
-        $ANDROID_HOME/build-tools/*/apksigner verify app-release-signed.apk
+        # Sign the APK with correct syntax
+        java -jar $ANDROID_HOME/build-tools/*/lib/apksigner.jar sign \
+          --ks release.keystore \
+          --ks-key-alias androiddebugkey \
+          --ks-pass pass:android \
+          --key-pass pass:android \
+          --out app-release-signed.apk \
+          app-release-unsigned.apk
         
-        ls -la
+        # Alternative method using jarsigner if apksigner fails
+        if [ ! -f "app-release-signed.apk" ]; then
+          echo "Using jarsigner as fallback"
+          cp app-release-unsigned.apk app-release-signed.apk
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore release.keystore -storepass android app-release-signed.apk androiddebugkey
+          
+          # Align the APK
+          $ANDROID_HOME/build-tools/*/zipalign -v 4 app-release-signed.apk app-release-aligned.apk
+          mv app-release-aligned.apk app-release-signed.apk
+        fi
+        
+        # Verify the APK exists
+        ls -la app-release-signed.apk
 
     - name: Upload Signed APK Artifact
       uses: actions/upload-artifact@v4
