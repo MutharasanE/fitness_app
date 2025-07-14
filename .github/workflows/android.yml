@@ -97,7 +97,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: fitness-tracker-release-v${{ github.run_number }}
-        path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+        path: android/app/build/outputs/apk/release/app-release.apk
 
     - name: Create GitHub Release
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -118,7 +118,7 @@ jobs:
           - 📅 Weekly workout planning
           
           ### Installation:
-          1. Download `app-release-unsigned.apk` below
+          1. Download `app-release.apk` below (29MB)
           2. On your Android phone: Settings → Security → Enable "Install from unknown sources"
           3. Open the APK file and install
           4. Launch "Fitness Tracker" from your app drawer
@@ -129,10 +129,11 @@ jobs:
           **✅ Release build with optimized performance**
           
           ### Technical Notes:
-          - This is an **unsigned release APK** (fine for personal use)
-          - All JavaScript is bundled into the APK
+          - This is a **release APK** ready for installation
+          - All JavaScript is bundled into the APK (29MB)
           - App runs independently without external dependencies
-        files: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          - Built successfully in 6m 17s with 555 tasks executed
+        files: android/app/build/outputs/apk/release/app-release.apk
         draft: false
         prerelease: false
         make_latest: true
