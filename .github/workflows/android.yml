@@ -32,9 +32,10 @@ jobs:
     - name: Install Expo CLI
       run: npm install -g @expo/cli
       
-    - name: Install missing dependencies
+    - name: Install required Expo packages
       run: |
-        # Install any missing React Native dependencies
+        # Install expo-build-properties and other required packages
+        npx expo install expo-build-properties
         npx expo install --fix
         
     - name: Create missing assets
