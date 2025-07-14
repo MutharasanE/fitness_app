@@ -15,18 +15,19 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
+        cache: 'npm'
         
     - name: Setup Java JDK
       uses: actions/setup-java@v4
       with:
         java-version: '17'
-        distribution: 'adopt'
+        distribution: 'temurin'
         
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       
     - name: Install dependencies
-      run: npm install
+      run: npm ci
       
     - name: Install sharp for image processing
       run: npm install sharp
@@ -35,7 +36,7 @@ jobs:
       run: |
         if [ -f "app.json" ] || [ -f "app.config.js" ]; then
           echo "Expo project detected"
-          npm install -g @expo/cli
+          npm install -g @expo/cli eas-cli
           npx expo install --fix
           
           # Create assets directory
@@ -48,15 +49,15 @@ jobs:
         
         async function createPlaceholders() {
           try {
-            // Create icon.png (1024x1024)
+            // Create icon.png (1024x1024) - Fitness app themed
             if (!fs.existsSync('assets/icon.png')) {
-              console.log('Creating placeholder icon.png');
+              console.log('Creating fitness app icon.png');
               await sharp({
                 create: {
                   width: 1024,
                   height: 1024,
                   channels: 4,
-                  background: { r: 0, g: 150, b: 255, alpha: 1 }
+                  background: { r: 76, g: 175, b: 80, alpha: 1 } // Green fitness theme
                 }
               })
               .png()
@@ -65,28 +66,28 @@ jobs:
             
             // Create adaptive-icon.png (1024x1024)
             if (!fs.existsSync('assets/adaptive-icon.png')) {
-              console.log('Creating placeholder adaptive-icon.png');
+              console.log('Creating adaptive-icon.png');
               await sharp({
                 create: {
                   width: 1024,
                   height: 1024,
                   channels: 4,
-                  background: { r: 0, g: 200, b: 100, alpha: 1 }
+                  background: { r: 76, g: 175, b: 80, alpha: 1 }
                 }
               })
               .png()
               .toFile('assets/adaptive-icon.png');
             }
             
-            // Create splash.png (1284x2778)
+            // Create splash.png (1284x2778) - Fitness themed
             if (!fs.existsSync('assets/splash.png')) {
-              console.log('Creating placeholder splash.png');
+              console.log('Creating fitness splash.png');
               await sharp({
                 create: {
                   width: 1284,
                   height: 2778,
                   channels: 4,
-                  background: { r: 255, g: 255, b: 255, alpha: 1 }
+                  background: { r: 245, g: 245, b: 245, alpha: 1 }
                 }
               })
               .png()
@@ -95,20 +96,20 @@ jobs:
             
             // Create favicon.png (48x48)
             if (!fs.existsSync('assets/favicon.png')) {
-              console.log('Creating placeholder favicon.png');
+              console.log('Creating favicon.png');
               await sharp({
                 create: {
                   width: 48,
                   height: 48,
                   channels: 4,
-                  background: { r: 255, g: 100, b: 100, alpha: 1 }
+                  background: { r: 76, g: 175, b: 80, alpha: 1 }
                 }
               })
               .png()
               .toFile('assets/favicon.png');
             }
             
-            console.log('All placeholder assets created successfully');
+            console.log('All fitness app assets created successfully');
           } catch (error) {
             console.error('Error creating assets:', error);
             process.exit(1);
@@ -125,20 +126,68 @@ jobs:
           rm create_assets.js
           
           # Generate native code
-          npx expo prebuild --platform android
+          npx expo prebuild --platform android --clean
         else
           echo "Regular React Native project - android folder should exist"
           exit 1
         fi
+
+    - name: Generate debug keystore
+      run: |
+        cd android/app
+        keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
         
     - name: Build Android APK
       run: |
         cd android
         chmod +x gradlew
+        # Build debug APK (signed with debug key)
+        ./gradlew assembleDebug
+        # Also build release APK
         ./gradlew assembleRelease
         
-    - name: Upload APK
+    - name: Sign Release APK
+      run: |
+        cd android/app/build/outputs/apk/release
+        # Sign the release APK with debug keystore for CI/CD
+        $ANDROID_HOME/build-tools/*/apksigner sign --ks ../../debug.keystore --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --out app-release-signed.apk app-release-unsigned.apk
+        
+    - name: Upload Debug APK
       uses: actions/upload-artifact@v4
       with:
-        name: app-release
-        path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+        name: fitness-app-debug
+        path: android/app/build/outputs/apk/debug/app-debug.apk
+        
+    - name: Upload Signed Release APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: fitness-app-release
+        path: android/app/build/outputs/apk/release/app-release-signed.apk
+
+    - name: Create Release
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ github.run_number }}
+        name: Fitness Tracker v${{ github.run_number }}
+        body: |
+          ## Fitness Tracker Release
+          
+          Features included:
+          - User profile management (weight, height, age, gender, activity level)
+          - Calorie tracking with meal entries
+          - Workout session tracking with sets, reps, and weights
+          - Exercise library with custom exercise support
+          - Workout planning system
+          
+          ### Installation
+          Download the APK file and install on your Android device.
+          
+          **Note:** This is a debug-signed APK for testing purposes.
+        files: |
+          android/app/build/outputs/apk/debug/app-debug.apk
+          android/app/build/outputs/apk/release/app-release-signed.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
