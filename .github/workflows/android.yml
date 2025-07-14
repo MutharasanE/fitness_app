@@ -29,106 +29,60 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
-    - name: Install sharp for image processing
-      run: npm install sharp
+    - name: Install Expo CLI
+      run: npm install -g @expo/cli
       
-    - name: Setup Expo project
+    - name: Install missing dependencies
       run: |
-        npm install -g @expo/cli
+        # Install any missing React Native dependencies
         npx expo install --fix
         
-        # Create assets directory
+    - name: Create missing assets
+      run: |
+        npm install sharp
+        
+        # Create assets directory if it doesn't exist
         mkdir -p assets
         
-        # Create simple app configuration
-        cat > app.json << 'EOF'
-        {
-          "expo": {
-            "name": "Fitness Tracker",
-            "slug": "fitness-tracker",
-            "version": "1.0.0",
-            "orientation": "portrait",
-            "icon": "./assets/icon.png",
-            "userInterfaceStyle": "light",
-            "splash": {
-              "image": "./assets/splash.png",
-              "resizeMode": "contain",
-              "backgroundColor": "#ffffff"
-            },
-            "android": {
-              "package": "com.fitnessapp.tracker",
-              "versionCode": 1,
-              "adaptiveIcon": {
-                "foregroundImage": "./assets/adaptive-icon.png",
-                "backgroundColor": "#4CAF50"
-              }
-            },
-            "web": {
-              "favicon": "./assets/favicon.png"
-            }
-          }
-        }
-        EOF
-        
-        # Create app assets
+        # Only create assets if they don't exist
         node -e "
         const sharp = require('sharp');
+        const fs = require('fs');
         
-        async function createAssets() {
-          // App icon - green fitness theme
-          await sharp({
-            create: {
-              width: 1024,
-              height: 1024,
-              channels: 4,
-              background: { r: 76, g: 175, b: 80, alpha: 1 }
-            }
-          }).png().toFile('assets/icon.png');
+        async function createMissingAssets() {
+          const assets = [
+            { name: 'icon.png', width: 1024, height: 1024 },
+            { name: 'adaptive-icon.png', width: 1024, height: 1024 },
+            { name: 'splash.png', width: 1284, height: 2778 },
+            { name: 'favicon.png', width: 48, height: 48 }
+          ];
           
-          // Adaptive icon
-          await sharp({
-            create: {
-              width: 1024,
-              height: 1024,
-              channels: 4,
-              background: { r: 76, g: 175, b: 80, alpha: 1 }
+          for (const asset of assets) {
+            if (!fs.existsSync(\`assets/\${asset.name}\`)) {
+              console.log(\`Creating \${asset.name}\`);
+              await sharp({
+                create: {
+                  width: asset.width,
+                  height: asset.height,
+                  channels: 4,
+                  background: { r: 76, g: 175, b: 80, alpha: 1 }
+                }
+              }).png().toFile(\`assets/\${asset.name}\`);
             }
-          }).png().toFile('assets/adaptive-icon.png');
-          
-          // Splash screen
-          await sharp({
-            create: {
-              width: 1284,
-              height: 2778,
-              channels: 4,
-              background: { r: 255, g: 255, b: 255, alpha: 1 }
-            }
-          }).png().toFile('assets/splash.png');
-          
-          // Favicon
-          await sharp({
-            create: {
-              width: 48,
-              height: 48,
-              channels: 4,
-              background: { r: 76, g: 175, b: 80, alpha: 1 }
-            }
-          }).png().toFile('assets/favicon.png');
-          
-          console.log('Assets created');
+          }
+          console.log('Assets check complete');
         }
-        createAssets().catch(console.error);
+        createMissingAssets().catch(console.error);
         "
-        
-        # Generate Android project
+
+    - name: Generate Android project
+      run: |
         npx expo prebuild --platform android --clean
 
     - name: Build APK
       run: |
         cd android
         chmod +x gradlew
-        
-        # Build debug APK (easiest to install)
         ./gradlew assembleDebug
         
         # Verify APK was created
@@ -137,7 +91,7 @@ jobs:
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: fitness-tracker-app
+        name: fitness-tracker-v${{ github.run_number }}
         path: android/app/build/outputs/apk/debug/app-debug.apk
 
     - name: Create Release
@@ -152,11 +106,11 @@ jobs:
           **Ready to install and use offline!**
           
           ### Features:
-          - Track your weight, height, age, and activity level
-          - Log calories and meals
-          - Record workout sessions with sets, reps, and weights  
-          - Manage exercise library
-          - Plan weekly workouts
+          - 📊 User profile tracking (weight, height, age, activity level)
+          - 🍎 Calorie and meal logging
+          - 💪 Workout session recording with sets, reps, and weights
+          - 📋 Exercise library with custom exercises
+          - 📅 Weekly workout planning
           
           ### Installation:
           1. Download `app-debug.apk` below
@@ -164,7 +118,8 @@ jobs:
           3. Open the APK file and install
           4. Launch "Fitness Tracker" from your app drawer
           
-          **No internet connection required - works completely offline!**
+          **✅ Works completely offline - no server required!**
+          **✅ All data stored locally on your device**
         files: android/app/build/outputs/apk/debug/app-debug.apk
         draft: false
       env:
