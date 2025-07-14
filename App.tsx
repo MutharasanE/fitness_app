@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Provider as PaperProvider } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { StatusBar } from 'expo-status-bar';
+import { StatusBar } from 'react-native'; // Changed from expo-status-bar
 
 import CalorieTracker from './src/screens/CalorieTracker';
 import WorkoutTracker from './src/screens/WorkoutTracker';
@@ -92,7 +92,7 @@ export default function App() {
     <PaperProvider>
       <FitnessProvider>
         <NavigationContainer>
-          <StatusBar style="light" backgroundColor="#4CAF50" />
+          <StatusBar barStyle="light-content" backgroundColor="#4CAF50" />
           <MainTabs />
         </NavigationContainer>
       </FitnessProvider>
