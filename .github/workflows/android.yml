@@ -32,162 +32,140 @@ jobs:
     - name: Install sharp for image processing
       run: npm install sharp
       
-    - name: Check project type and setup
+    - name: Setup Expo project
       run: |
-        if [ -f "app.json" ] || [ -f "app.config.js" ]; then
-          echo "Expo project detected"
-          npm install -g @expo/cli eas-cli
-          npx expo install --fix
-          
-          # Create assets directory
-          mkdir -p assets
-          
-          # Create placeholder images using Node.js and sharp
-          cat > create_assets.js << 'EOF'
-        const sharp = require('sharp');
-        const fs = require('fs');
+        npm install -g @expo/cli
+        npx expo install --fix
         
-        async function createPlaceholders() {
-          try {
-            // Create icon.png (1024x1024) - Fitness app themed
-            if (!fs.existsSync('assets/icon.png')) {
-              console.log('Creating fitness app icon.png');
-              await sharp({
-                create: {
-                  width: 1024,
-                  height: 1024,
-                  channels: 4,
-                  background: { r: 76, g: 175, b: 80, alpha: 1 } // Green fitness theme
-                }
-              })
-              .png()
-              .toFile('assets/icon.png');
+        # Create assets directory
+        mkdir -p assets
+        
+        # Create simple app configuration
+        cat > app.json << 'EOF'
+        {
+          "expo": {
+            "name": "Fitness Tracker",
+            "slug": "fitness-tracker",
+            "version": "1.0.0",
+            "orientation": "portrait",
+            "icon": "./assets/icon.png",
+            "userInterfaceStyle": "light",
+            "splash": {
+              "image": "./assets/splash.png",
+              "resizeMode": "contain",
+              "backgroundColor": "#ffffff"
+            },
+            "android": {
+              "package": "com.fitnessapp.tracker",
+              "versionCode": 1,
+              "adaptiveIcon": {
+                "foregroundImage": "./assets/adaptive-icon.png",
+                "backgroundColor": "#4CAF50"
+              }
+            },
+            "web": {
+              "favicon": "./assets/favicon.png"
             }
-            
-            // Create adaptive-icon.png (1024x1024)
-            if (!fs.existsSync('assets/adaptive-icon.png')) {
-              console.log('Creating adaptive-icon.png');
-              await sharp({
-                create: {
-                  width: 1024,
-                  height: 1024,
-                  channels: 4,
-                  background: { r: 76, g: 175, b: 80, alpha: 1 }
-                }
-              })
-              .png()
-              .toFile('assets/adaptive-icon.png');
-            }
-            
-            // Create splash.png (1284x2778) - Fitness themed
-            if (!fs.existsSync('assets/splash.png')) {
-              console.log('Creating fitness splash.png');
-              await sharp({
-                create: {
-                  width: 1284,
-                  height: 2778,
-                  channels: 4,
-                  background: { r: 245, g: 245, b: 245, alpha: 1 }
-                }
-              })
-              .png()
-              .toFile('assets/splash.png');
-            }
-            
-            // Create favicon.png (48x48)
-            if (!fs.existsSync('assets/favicon.png')) {
-              console.log('Creating favicon.png');
-              await sharp({
-                create: {
-                  width: 48,
-                  height: 48,
-                  channels: 4,
-                  background: { r: 76, g: 175, b: 80, alpha: 1 }
-                }
-              })
-              .png()
-              .toFile('assets/favicon.png');
-            }
-            
-            console.log('All fitness app assets created successfully');
-          } catch (error) {
-            console.error('Error creating assets:', error);
-            process.exit(1);
           }
         }
-        
-        createPlaceholders();
         EOF
-          
-          # Run the asset creation script
-          node create_assets.js
-          
-          # Clean up the script
-          rm create_assets.js
-          
-          # Generate native code
-          npx expo prebuild --platform android --clean
-        else
-          echo "Regular React Native project - android folder should exist"
-          exit 1
-        fi
-
-    - name: Generate debug keystore
-      run: |
-        cd android/app
-        keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
         
-    - name: Build Android APK
+        # Create app assets
+        node -e "
+        const sharp = require('sharp');
+        
+        async function createAssets() {
+          // App icon - green fitness theme
+          await sharp({
+            create: {
+              width: 1024,
+              height: 1024,
+              channels: 4,
+              background: { r: 76, g: 175, b: 80, alpha: 1 }
+            }
+          }).png().toFile('assets/icon.png');
+          
+          // Adaptive icon
+          await sharp({
+            create: {
+              width: 1024,
+              height: 1024,
+              channels: 4,
+              background: { r: 76, g: 175, b: 80, alpha: 1 }
+            }
+          }).png().toFile('assets/adaptive-icon.png');
+          
+          // Splash screen
+          await sharp({
+            create: {
+              width: 1284,
+              height: 2778,
+              channels: 4,
+              background: { r: 255, g: 255, b: 255, alpha: 1 }
+            }
+          }).png().toFile('assets/splash.png');
+          
+          // Favicon
+          await sharp({
+            create: {
+              width: 48,
+              height: 48,
+              channels: 4,
+              background: { r: 76, g: 175, b: 80, alpha: 1 }
+            }
+          }).png().toFile('assets/favicon.png');
+          
+          console.log('Assets created');
+        }
+        createAssets().catch(console.error);
+        "
+        
+        # Generate Android project
+        npx expo prebuild --platform android --clean
+
+    - name: Build APK
       run: |
         cd android
         chmod +x gradlew
-        # Build debug APK (signed with debug key)
+        
+        # Build debug APK (easiest to install)
         ./gradlew assembleDebug
-        # Also build release APK
-        ./gradlew assembleRelease
         
-    - name: Sign Release APK
-      run: |
-        cd android/app/build/outputs/apk/release
-        # Sign the release APK with debug keystore for CI/CD
-        $ANDROID_HOME/build-tools/*/apksigner sign --ks ../../debug.keystore --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android --out app-release-signed.apk app-release-unsigned.apk
-        
-    - name: Upload Debug APK
+        # Verify APK was created
+        ls -la app/build/outputs/apk/debug/
+
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: fitness-app-debug
+        name: fitness-tracker-app
         path: android/app/build/outputs/apk/debug/app-debug.apk
-        
-    - name: Upload Signed Release APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: fitness-app-release
-        path: android/app/build/outputs/apk/release/app-release-signed.apk
 
     - name: Create Release
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      if: github.ref == 'refs/heads/main'
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v${{ github.run_number }}
         name: Fitness Tracker v${{ github.run_number }}
         body: |
-          ## Fitness Tracker Release
+          ## 🏋️ Fitness Tracker - Standalone Mobile App
           
-          Features included:
-          - User profile management (weight, height, age, gender, activity level)
-          - Calorie tracking with meal entries
-          - Workout session tracking with sets, reps, and weights
-          - Exercise library with custom exercise support
-          - Workout planning system
+          **Ready to install and use offline!**
           
-          ### Installation
-          Download the APK file and install on your Android device.
+          ### Features:
+          - Track your weight, height, age, and activity level
+          - Log calories and meals
+          - Record workout sessions with sets, reps, and weights  
+          - Manage exercise library
+          - Plan weekly workouts
           
-          **Note:** This is a debug-signed APK for testing purposes.
-        files: |
-          android/app/build/outputs/apk/debug/app-debug.apk
-          android/app/build/outputs/apk/release/app-release-signed.apk
+          ### Installation:
+          1. Download `app-debug.apk` below
+          2. On your Android phone: Settings → Security → Enable "Install from unknown sources"
+          3. Open the APK file and install
+          4. Launch "Fitness Tracker" from your app drawer
+          
+          **No internet connection required - works completely offline!**
+        files: android/app/build/outputs/apk/debug/app-debug.apk
         draft: false
-        prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
