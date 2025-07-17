@@ -37,6 +37,8 @@ const CalorieTracker = () => {
   const [mealMenuVisible, setMealMenuVisible] = useState(false);
   const [genderMenuVisible, setGenderMenuVisible] = useState(false);
   const [activityMenuVisible, setActivityMenuVisible] = useState(false);
+  const [showMealPlanModal, setShowMealPlanModal] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(1);
   
   const [newEntry, setNewEntry] = useState({
     calories: '',
@@ -158,6 +160,59 @@ const CalorieTracker = () => {
     { label: 'Very Active', value: 'very_active' },
   ];
 
+  const mealPlan = [
+    {
+      day: 1,
+      breakfast: "2 boiled eggs, 1 toast, 1 banana, black coffee with milk",
+      lunch: "Chicken rice bowl: 250g baked chicken, 100g cooked plain rice, 100g steamed spinach",
+      dinner: "Chicken salad: 250g chicken, 1 boiled egg, lettuce, tomato, cucumber, 1 apple",
+      snack: "150g Greek yogurt, 10 almonds, coffee with milk"
+    },
+    {
+      day: 2,
+      breakfast: "3 scrambled eggs with spinach, 1 slice rye bread, black coffee",
+      lunch: "Quinoa chicken bowl: 250g chicken, 100g cooked quinoa, 100g sautéed spinach",
+      dinner: "Chicken stir-fry: 250g chicken, zucchini, mushrooms, 1 orange",
+      snack: "150g Greek yogurt, 1 tsp peanut butter, coffee"
+    },
+    {
+      day: 3,
+      breakfast: "2 eggs, 30g oats with banana, black coffee",
+      lunch: "Bulgur chicken plate: 250g chicken, 100g cooked bulgur, 100g carrots & beans",
+      dinner: "Chicken lettuce wraps: 250g chicken, 1 boiled egg, tomato, salad leaves, 1 apple",
+      snack: "150g Greek yogurt, 6 walnuts, coffee"
+    },
+    {
+      day: 4,
+      breakfast: "3-egg omelette with tomato & onion, black coffee",
+      lunch: "Chicken & sweet potato: 250g chicken, 100g sweet potato, 100g spinach",
+      dinner: "Spinach chicken: 250g chicken, 100g sautéed spinach with garlic, 1 orange",
+      snack: "150g Greek yogurt, 10 almonds, coffee"
+    },
+    {
+      day: 5,
+      breakfast: "2 eggs + 1 egg white, 1 toast, 1 banana, black coffee",
+      lunch: "Millet chicken bowl: 250g chicken, 100g cooked millet, 100g carrots & peas",
+      dinner: "Grilled chicken salad: 250g chicken, 1 tsp olive oil, cucumber salad, 1 apple",
+      snack: "150g Greek yogurt, 1 tsp flaxseed, coffee"
+    },
+    {
+      day: 6,
+      breakfast: "3 boiled eggs, 1 toast, black coffee",
+      lunch: "Chicken & potato: 250g chicken, 100g potato, 100g spinach or mixed veggies",
+      dinner: "Chicken & roasted cauliflower: 250g chicken, 1 boiled egg, 100g cauliflower & carrots",
+      snack: "150g Greek yogurt, 1 tsp peanut butter"
+    },
+    {
+      day: 7,
+      breakfast: "2 boiled eggs, 1 toast, 1 orange, coffee",
+      lunch: "Couscous chicken bowl: 250g chicken, 100g couscous, 100g green beans",
+      dinner: "Chicken & veggie bowl: 250g chicken, boiled egg, roasted carrots & cauliflower",
+      snack: "150g Greek yogurt, 1 tsp chia seeds, coffee"
+    }
+  ];
+
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content}>
@@ -278,6 +333,25 @@ const CalorieTracker = () => {
             )}
           </Card.Content>
         </Card>
+
+         {/* Meal Plan Card */}
+        <Card style={styles.mealPlanCard}>
+          <Card.Content>
+            <Title>7-Day Meal Plan</Title>
+            <Paragraph style={styles.mealPlanDescription}>
+              Follow this structured meal plan for balanced nutrition
+            </Paragraph>
+            <Button
+              mode="contained"
+              onPress={() => setShowMealPlanModal(true)}
+              style={styles.mealPlanButton}
+              icon="calendar-month"
+            >
+              View Meal Plan
+            </Button>
+          </Card.Content>
+        </Card>
+
       </ScrollView>
 
       {/* Add Entry FAB */}
@@ -357,6 +431,79 @@ const CalorieTracker = () => {
               style={styles.modalButton}
             >
               Add Entry
+            </Button>
+          </View>
+        </Modal>
+      </Portal>
+
+      <Portal>
+        <Modal
+          visible={showMealPlanModal}
+          onDismiss={() => setShowMealPlanModal(false)}
+          contentContainerStyle={styles.mealPlanModalContainer}
+        >
+          <View style={styles.mealPlanHeader}>
+            <Title style={styles.modalTitle}>7-Day Meal Plan</Title>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              style={styles.daySelector}
+            >
+              {mealPlan.map((day) => (
+                <Button
+                  key={day.day}
+                  mode={selectedDay === day.day ? "contained" : "outlined"}
+                  onPress={() => setSelectedDay(day.day)}
+                  style={styles.dayButton}
+                  compact
+                >
+                  Day {day.day}
+                </Button>
+              ))}
+            </ScrollView>
+          </View>
+
+          <ScrollView style={styles.mealPlanContent}>
+            {mealPlan
+              .filter(day => day.day === selectedDay)
+              .map((day) => (
+                <View key={day.day}>
+                  <View style={styles.mealSection}>
+                    <Text style={styles.mealTitle}>🍳 Breakfast</Text>
+                    <Text style={styles.mealDescription}>{day.breakfast}</Text>
+                  </View>
+                  
+                  <Divider style={styles.mealDivider} />
+                  
+                  <View style={styles.mealSection}>
+                    <Text style={styles.mealTitle}>🍽️ Lunch</Text>
+                    <Text style={styles.mealDescription}>{day.lunch}</Text>
+                  </View>
+                  
+                  <Divider style={styles.mealDivider} />
+                  
+                  <View style={styles.mealSection}>
+                    <Text style={styles.mealTitle}>🍖 Dinner</Text>
+                    <Text style={styles.mealDescription}>{day.dinner}</Text>
+                  </View>
+                  
+                  <Divider style={styles.mealDivider} />
+                  
+                  <View style={styles.mealSection}>
+                    <Text style={styles.mealTitle}>🥜 Snack</Text>
+                    <Text style={styles.mealDescription}>{day.snack}</Text>
+                  </View>
+                </View>
+              ))}
+          </ScrollView>
+
+          <View style={styles.mealPlanFooter}>
+            <Button
+              mode="contained"
+              onPress={() => setShowMealPlanModal(false)}
+              style={styles.closeMealPlanButton}
+            >
+              Close
             </Button>
           </View>
         </Modal>
@@ -628,6 +775,68 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 0.4,
+  },
+  mealPlanCard: {
+    marginBottom: 16,
+    backgroundColor: '#f3e5f5',
+  },
+  mealPlanDescription: {
+    marginBottom: 12,
+    color: '#666',
+  },
+  mealPlanButton: {
+    backgroundColor: '#9c27b0',
+  },
+  mealPlanModalContainer: {
+    backgroundColor: 'white',
+    margin: 10,
+    borderRadius: 8,
+    maxHeight: '95%',
+    flex: 1,
+  },
+  mealPlanHeader: {
+    padding: 20,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  daySelector: {
+    marginTop: 15,
+  },
+  dayButton: {
+    marginRight: 8,
+    minWidth: 70,
+  },
+  mealPlanContent: {
+    flex: 1,
+    padding: 20,
+  },
+  mealSection: {
+    marginBottom: 20,
+  },
+  mealTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  mealDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#666',
+    paddingLeft: 8,
+  },
+  mealDivider: {
+    marginBottom: 20,
+    backgroundColor: '#eee',
+  },
+  mealPlanFooter: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  closeMealPlanButton: {
+    backgroundColor: '#9c27b0',
   },
 });
 
