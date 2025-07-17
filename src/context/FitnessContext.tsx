@@ -46,65 +46,65 @@ const FitnessContext = createContext<FitnessContextType | undefined>(undefined);
 
 const defaultExercises: Exercise[] = [
   // Chest
-  { id: 'chest_1', name: 'Bench Press', category: 'chest', isCustom: false, defaultSets: 3, defaultReps: 10, defaultWeight: 135 },
-  { id: 'chest_2', name: 'Push-ups', category: 'chest', isCustom: false, defaultSets: 3, defaultReps: 15, defaultWeight: 0 },
-  { id: 'chest_3', name: 'Incline Dumbbell Press', category: 'chest', isCustom: false, defaultSets: 3, defaultReps: 10, defaultWeight: 50 },
-  { id: 'chest_4', name: 'Dumbbell Flyes', category: 'chest', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 25 },
+  { id: 'chest_1', name: 'Bench Press', category: 'chest', isCustom: false, defaultSets: 4, defaultReps: 10, defaultWeight: 135 },
+  { id: 'chest_2', name: 'Incline Dumbbell Press', category: 'chest', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 50 },
+  { id: 'chest_3', name: 'Chest Cable Flys', category: 'chest', isCustom: false, defaultSets: 3, defaultReps: 15, defaultWeight: 30 },
+  { id: 'chest_4', name: 'Dips', category: 'chest', isCustom: false, defaultSets: 3, defaultReps: 10, defaultWeight: 0 },
 
   // Back
-  { id: 'back_1', name: 'Pull-ups', category: 'back', isCustom: false, defaultSets: 3, defaultReps: 8, defaultWeight: 0 },
-  { id: 'back_2', name: 'Deadlift', category: 'back', isCustom: false, defaultSets: 3, defaultReps: 5, defaultWeight: 185 },
-  { id: 'back_3', name: 'Bent-over Row', category: 'back', isCustom: false, defaultSets: 3, defaultReps: 10, defaultWeight: 135 },
-  { id: 'back_4', name: 'Lat Pulldown', category: 'back', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 100 },
-  { id: 'back_5', name: 'T-Bar Row', category: 'back', isCustom: false, defaultSets: 3, defaultReps: 10, defaultWeight: 90 },
+  { id: 'back_1', name: 'Pull-Ups', category: 'back', isCustom: false, defaultSets: 4, defaultReps: 10, defaultWeight: 0 },
+  { id: 'back_2', name: 'Lat Pulldown', category: 'back', isCustom: false, defaultSets: 4, defaultReps: 10, defaultWeight: 100 },
+  { id: 'back_3', name: 'Barbell Bent Over Row', category: 'back', isCustom: false, defaultSets: 4, defaultReps: 10, defaultWeight: 135 },
+  { id: 'back_4', name: 'Seated Cable Row', category: 'back', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 90 },
 
   // Shoulders
-  { id: 'shoulders_1', name: 'Overhead Press', category: 'shoulders', isCustom: false, defaultSets: 3, defaultReps: 8, defaultWeight: 95 },
-  { id: 'shoulders_2', name: 'Lateral Raises', category: 'shoulders', isCustom: false, defaultSets: 3, defaultReps: 15, defaultWeight: 15 },
-  { id: 'shoulders_3', name: 'Front Raises', category: 'shoulders', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 15 },
-  { id: 'shoulders_4', name: 'Rear Delt Flyes', category: 'shoulders', isCustom: false, defaultSets: 3, defaultReps: 15, defaultWeight: 10 },
+  { id: 'shoulders_1', name: 'Seated Shoulder Press', category: 'shoulders', isCustom: false, defaultSets: 4, defaultReps: 10, defaultWeight: 95 },
+  { id: 'shoulders_2', name: 'Lateral Raise', category: 'shoulders', isCustom: false, defaultSets: 3, defaultReps: 15, defaultWeight: 15 },
+  { id: 'shoulders_3', name: 'Front Raise', category: 'shoulders', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 15 },
 
   // Biceps
-  { id: 'biceps_1', name: 'Bicep Curls', category: 'biceps', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 25 },
-  { id: 'biceps_2', name: 'Hammer Curls', category: 'biceps', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 25 },
-  { id: 'biceps_3', name: 'Preacher Curls', category: 'biceps', isCustom: false, defaultSets: 3, defaultReps: 10, defaultWeight: 30 },
-  { id: 'biceps_4', name: 'Cable Curls', category: 'biceps', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 40 },
+  { id: 'biceps_1', name: 'Dumbbell Bicep Curls', category: 'biceps', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 25 },
+  { id: 'biceps_2', name: 'Barbell EZ Curl', category: 'biceps', isCustom: false, defaultSets: 3, defaultReps: 10, defaultWeight: 30 },
+  { id: 'biceps_3', name: 'Concentration Curl', category: 'biceps', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 25 },
 
   // Triceps
-  { id: 'triceps_1', name: 'Tricep Dips', category: 'triceps', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 0 },
-  { id: 'triceps_2', name: 'Close-grip Bench Press', category: 'triceps', isCustom: false, defaultSets: 3, defaultReps: 10, defaultWeight: 115 },
-  { id: 'triceps_3', name: 'Overhead Tricep Extension', category: 'triceps', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 35 },
-  { id: 'triceps_4', name: 'Tricep Pushdowns', category: 'triceps', isCustom: false, defaultSets: 3, defaultReps: 15, defaultWeight: 50 },
+  { id: 'triceps_1', name: 'Overhead Tricep Extension', category: 'triceps', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 35 },
+  { id: 'triceps_2', name: 'Rope Tricep Pushdown', category: 'triceps', isCustom: false, defaultSets: 3, defaultReps: 15, defaultWeight: 50 },
+  { id: 'triceps_3', name: 'Skull Crushers', category: 'triceps', isCustom: false, defaultSets: 3, defaultReps: 10, defaultWeight: 40 },
 
   // Forearms
-  { id: 'forearms_1', name: 'Wrist Curls', category: 'forearms', isCustom: false, defaultSets: 3, defaultReps: 20, defaultWeight: 15 },
-  { id: 'forearms_2', name: 'Reverse Curls', category: 'forearms', isCustom: false, defaultSets: 3, defaultReps: 15, defaultWeight: 20 },
-  { id: 'forearms_3', name: 'Farmer\'s Walk', category: 'forearms', isCustom: false, defaultSets: 3, defaultReps: 30, defaultWeight: 50 },
+  { id: 'forearms_1', name: 'Hammer Curl', category: 'forearms', isCustom: false, defaultSets: 3, defaultReps: 15, defaultWeight: 25 },
+  { id: 'forearms_2', name: 'Wrist Curls', category: 'forearms', isCustom: false, defaultSets: 3, defaultReps: 20, defaultWeight: 15 },
+  { id: 'forearms_3', name: 'Reverse Curl', category: 'forearms', isCustom: false, defaultSets: 3, defaultReps: 15, defaultWeight: 20 },
   
   // Legs
-  { id: 'legs_1', name: 'Squats', category: 'legs', isCustom: false, defaultSets: 3, defaultReps: 10, defaultWeight: 155 },
-  { id: 'legs_2', name: 'Lunges', category: 'legs', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 25 },
-  { id: 'legs_3', name: 'Leg Press', category: 'legs', isCustom: false, defaultSets: 3, defaultReps: 15, defaultWeight: 200 },
-  { id: 'legs_4', name: 'Romanian Deadlift', category: 'legs', isCustom: false, defaultSets: 3, defaultReps: 10, defaultWeight: 135 },
-  { id: 'legs_5', name: 'Calf Raises', category: 'legs', isCustom: false, defaultSets: 3, defaultReps: 20, defaultWeight: 45 },
-  { id: 'legs_6', name: 'Leg Curls', category: 'legs', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 80 },
+  { id: 'legs_1', name: 'Squats', category: 'legs', isCustom: false, defaultSets: 4, defaultReps: 10, defaultWeight: 155 },
+  { id: 'legs_2', name: 'Leg Press', category: 'legs', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 200 },
+  { id: 'legs_3', name: 'Dumbbell Step-Ups', category: 'legs', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 25 },
+  { id: 'legs_4', name: 'Romanian Deadlifts', category: 'legs', isCustom: false, defaultSets: 3, defaultReps: 12, defaultWeight: 135 },
+  { id: 'legs_5', name: 'Seated Calf Raise', category: 'legs', isCustom: false, defaultSets: 3, defaultReps: 20, defaultWeight: 45 },
   
-  // Abs
-  { id: 'abs_1', name: 'Plank', category: 'abs', isCustom: false, defaultSets: 3, defaultReps: 60, defaultWeight: 0 },
-  { id: 'abs_2', name: 'Crunches', category: 'abs', isCustom: false, defaultSets: 3, defaultReps: 25, defaultWeight: 0 },
-  { id: 'abs_3', name: 'Russian Twists', category: 'abs', isCustom: false, defaultSets: 3, defaultReps: 30, defaultWeight: 10 },
-  { id: 'abs_4', name: 'Mountain Climbers', category: 'abs', isCustom: false, defaultSets: 3, defaultReps: 20, defaultWeight: 0 },
-  { id: 'abs_5', name: 'Bicycle Crunches', category: 'abs', isCustom: false, defaultSets: 3, defaultReps: 20, defaultWeight: 0 },
+  // Core/Abs
+  { id: 'abs_1', name: 'Cable Crunch', category: 'abs', isCustom: false, defaultSets: 3, defaultReps: 20, defaultWeight: 30 },
+  { id: 'abs_2', name: 'Weighted Leg Raises', category: 'abs', isCustom: false, defaultSets: 3, defaultReps: 15, defaultWeight: 10 },
+  { id: 'abs_3', name: 'Decline Bench Sit-Ups', category: 'abs', isCustom: false, defaultSets: 3, defaultReps: 15, defaultWeight: 0 },
+  { id: 'abs_4', name: 'Leg Raises + Flutter Kicks', category: 'abs', isCustom: false, defaultSets: 3, defaultReps: 20, defaultWeight: 0 },
+
+  // HIIT/Cardio
+  { id: 'hiit_1', name: 'Jump Rope', category: 'cardio', isCustom: false, defaultSets: 3, defaultReps: 120, defaultWeight: 0 }, // 2 minutes
+  { id: 'hiit_2', name: 'Burpees', category: 'cardio', isCustom: false, defaultSets: 3, defaultReps: 15, defaultWeight: 0 },
+  { id: 'hiit_3', name: 'High Knees', category: 'cardio', isCustom: false, defaultSets: 3, defaultReps: 30, defaultWeight: 0 }, // 30 seconds
+  { id: 'hiit_4', name: 'Mountain Climbers', category: 'cardio', isCustom: false, defaultSets: 3, defaultReps: 30, defaultWeight: 0 }, // 30 seconds
 ];
 
 const getDefaultWorkoutPlan = (): WorkoutPlan => ({
-  Monday: ['chest_1', 'chest_2', 'triceps_1', 'abs_1'],
-  Tuesday: ['back_1', 'back_3', 'biceps_1', 'abs_2'],
-  Wednesday: ['legs_1', 'legs_2', 'legs_5', 'abs_3'],
-  Thursday: ['shoulders_1', 'shoulders_2', 'forearms_1', 'abs_4'],
-  Friday: ['back_2', 'triceps_2', 'biceps_2', 'abs_5'],
-  Saturday: [], // Optional day
-  Sunday: [], // Rest day
+  Monday: ['chest_1', 'chest_2', 'chest_3', 'chest_4', 'triceps_1', 'triceps_2', 'abs_1', 'abs_2'], // Chest + Triceps + Core
+  Tuesday: ['back_1', 'back_3', 'back_4', 'biceps_1', 'biceps_2', 'forearms_1', 'forearms_2'], // Back + Biceps + Forearms
+  Wednesday: [], // Rest Day
+  Thursday: ['legs_1', 'legs_2', 'legs_3', 'legs_4', 'legs_5', 'abs_3', 'abs_2'], // Legs + Core
+  Friday: ['shoulders_1', 'shoulders_2', 'shoulders_3', 'triceps_3', 'biceps_3', 'forearms_3', 'abs_4', 'abs_1'], // Arms + Shoulders + Core
+  Saturday: ['hiit_1', 'hiit_2', 'hiit_3', 'hiit_4', 'abs_1'], // Optional HIIT/Core/Full Body
+  Sunday: [], // Rest/Recovery Day
 });
 
 export const FitnessProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
